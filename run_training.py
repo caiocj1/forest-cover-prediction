@@ -49,9 +49,9 @@ if __name__ == '__main__':
         lr_monitor = LearningRateMonitor()
 
         # Trainer
-        trainer = Trainer(accelerator='auto',
+        trainer = Trainer(accelerator='gpu',
                           devices=1 if torch.cuda.is_available() else None,
-                          max_epochs=64,
+                          max_epochs=256,
                           val_check_interval=300,
                           callbacks=[model_ckpt, lr_monitor],
                           logger=logger)

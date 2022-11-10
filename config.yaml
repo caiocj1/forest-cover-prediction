@@ -5,5 +5,5 @@ ModelParams:
   layer_width: 128
 
 TrainingParams:
-  num_splits: 10
+  num_splits: 5
   split_seed: 12345
