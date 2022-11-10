@@ -1,18 +1,33 @@
 import torch.optim
 from pytorch_lightning import LightningModule
 import torch.nn as nn
+import os
+import yaml
+from yaml import SafeLoader
 
 class ForestCoverModel(LightningModule):
 
     def __init__(self):
         super(ForestCoverModel, self).__init__()
+        self.read_config()
         self.build_model()
 
+    def read_config(self):
+        config_path = os.path.join(os.getcwd(), 'config.yaml')
+        with open(config_path) as f:
+            params = yaml.load(f, Loader=SafeLoader)
+        dataset_params = params['DatasetParams']
+        model_params = params['ModelParams']
+
+        self.reduced_dims = dataset_params['reduced_dims']
+
+        self.layer_width = model_params['layer_width']
+
     def build_model(self):
-        self.layer1 = nn.Linear(38, 128)
+        self.layer1 = nn.Linear(self.reduced_dims, self.layer_width)
         self.relu = nn.ReLU()
-        self.layer2 = nn.Linear(128, 128)
-        self.output = nn.Linear(128, 7)
+        self.layer2 = nn.Linear(self.layer_width, self.layer_width)
+        self.output = nn.Linear(self.layer_width, 7)
 
     def training_step(self, batch, batch_idx):
         loss, metrics = self._shared_step(batch)
