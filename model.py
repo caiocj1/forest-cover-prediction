@@ -4,6 +4,7 @@ import torch.nn as nn
 import os
 import yaml
 from yaml import SafeLoader
+from collections import OrderedDict
 
 class ForestCoverModel(LightningModule):
 
@@ -26,9 +27,11 @@ class ForestCoverModel(LightningModule):
 
     def build_model(self):
         self.input = nn.Linear(self.reduced_dims, self.layer_width)
-        self.hidden_layers = []
+        hidden_layers_dict = OrderedDict()
         for i in range(self.num_layers - 2):
-            self.hidden_layers.append(nn.Linear(self.layer_width, self.layer_width))
+            hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width, self.layer_width)
+            hidden_layers_dict['relu' + str(i + 1)] = nn.ReLU()
+        self.hidden_layers = nn.Sequential(hidden_layers_dict)
         self.output = nn.Linear(self.layer_width, 7)
         self.relu = nn.ReLU()
 
@@ -62,11 +65,10 @@ class ForestCoverModel(LightningModule):
     def forward(self, batch):
         encoding = self.input(batch[0].float())
 
-        for i in range(len(self.hidden_layers)):
-            encoding = self.hidden_layers[i](self.relu(encoding))
+        encoding = self.hidden_layers(self.relu(encoding))
 
         # Get logits
-        logits = self.output(self.relu(encoding))
+        logits = self.output(encoding)
 
         return logits
 
