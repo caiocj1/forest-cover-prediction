@@ -24,10 +24,6 @@ if __name__ == '__main__':
         params = yaml.load(f, Loader=yaml.SafeLoader)
     training_params = params['TrainingParams']
 
-    # Model selection
-    model = ForestCoverModel()
-    lr_monitor = LearningRateMonitor()
-
     # Initialize data module
     data_module = ForestCoverDataModule(
         split_seed=training_params['split_seed'],
@@ -38,9 +34,11 @@ if __name__ == '__main__':
     for k in range(training_params['num_splits']):
         print('Training on split', k, '...')
 
-        # data_module.prepare_data()
+        # Initialize new model and setup data module
+        model = ForestCoverModel()
         data_module.setup(stage='fit', k=k)
 
+        # Loggers and checkpoints
         logger = TensorBoardLogger('.', version=args.version + '_split=' + str(k))
         model_ckpt = ModelCheckpoint(dirpath=f'lightning_logs/{args.version}/checkpoints',
                                      filename='{epoch}-split=%d' % k,
@@ -48,6 +46,7 @@ if __name__ == '__main__':
                                      monitor='accuracy_val',
                                      mode='max',
                                      save_weights_only=True)
+        lr_monitor = LearningRateMonitor()
 
         # Trainer
         trainer = Trainer(accelerator='auto',
@@ -56,5 +55,4 @@ if __name__ == '__main__':
                           val_check_interval=300,
                           callbacks=[model_ckpt, lr_monitor],
                           logger=logger)
-
         trainer.fit(model, data_module)
