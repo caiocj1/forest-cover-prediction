@@ -24,6 +24,7 @@ class ForestCoverModel(LightningModule):
 
         self.layer_width = model_params['layer_width']
         self.num_layers = model_params['num_layers']
+        self.dropout = model_params['dropout']
 
     def build_model(self):
         self.input = nn.Linear(self.reduced_dims, self.layer_width)
@@ -31,6 +32,8 @@ class ForestCoverModel(LightningModule):
         for i in range(self.num_layers - 2):
             hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width, self.layer_width)
             hidden_layers_dict['relu' + str(i + 1)] = nn.ReLU()
+            if self.dropout:
+                hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout()
         self.hidden_layers = nn.Sequential(hidden_layers_dict)
         self.output = nn.Linear(self.layer_width, 7)
         self.relu = nn.ReLU()
