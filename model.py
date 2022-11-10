@@ -22,15 +22,15 @@ class ForestCoverModel(LightningModule):
         self.reduced_dims = dataset_params['reduced_dims']
 
         self.layer_width = model_params['layer_width']
+        self.num_layers = model_params['num_layers']
 
     def build_model(self):
-        self.layer1 = nn.Linear(self.reduced_dims, self.layer_width)
-        self.relu = nn.ReLU()
-        self.layer2 = nn.Linear(self.layer_width, self.layer_width)
+        self.input = nn.Linear(self.reduced_dims, self.layer_width)
+        self.hidden_layers = []
+        for i in range(self.num_layers - 2):
+            self.hidden_layers.append(nn.Linear(self.layer_width, self.layer_width))
         self.output = nn.Linear(self.layer_width, 7)
-        # If more layers:
-        self.layer3 = nn.Linear(self.layer_width, self.layer_width)
-        self.layer4 = nn.Linear(self.layer_width, self.layer_width)
+        self.relu = nn.ReLU()
 
     def training_step(self, batch, batch_idx):
         loss, metrics = self._shared_step(batch)
@@ -60,12 +60,10 @@ class ForestCoverModel(LightningModule):
         return loss, metrics
 
     def forward(self, batch):
-        encoding = self.layer1(batch[0].float())
-        encoding = self.layer2(self.relu(encoding))
+        encoding = self.input(batch[0].float())
 
-        # If more layers:
-        encoding = self.layer3(self.relu(encoding))
-        encoding = self.layer4(self.relu(encoding))
+        for i in range(len(self.hidden_layers)):
+            encoding = self.hidden_layers[i](self.relu(encoding))
 
         # Get logits
         logits = self.output(self.relu(encoding))

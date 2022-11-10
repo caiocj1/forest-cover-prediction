@@ -3,6 +3,7 @@ DatasetParams:
 
 ModelParams:
   layer_width: 128
+  num_layers: 5
 
 TrainingParams:
   num_splits: 5
