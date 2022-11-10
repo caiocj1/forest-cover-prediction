@@ -80,15 +80,10 @@ class ForestCoverModel(LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [32, 64, 96], gamma=0.2)
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        #lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [32, 64, 96], gamma=0.2)
 
-        opt = {
-            'optimizer': optimizer,
-            'lr_scheduler': lr_scheduler
-        }
-
-        return opt
+        return [optimizer], []
 
     def calc_metrics(self, logits, target):
         metrics = {}
