@@ -28,6 +28,9 @@ class ForestCoverModel(LightningModule):
         self.relu = nn.ReLU()
         self.layer2 = nn.Linear(self.layer_width, self.layer_width)
         self.output = nn.Linear(self.layer_width, 7)
+        # If more layers:
+        self.layer3 = nn.Linear(self.layer_width, self.layer_width)
+        self.layer4 = nn.Linear(self.layer_width, self.layer_width)
 
     def training_step(self, batch, batch_idx):
         loss, metrics = self._shared_step(batch)
@@ -59,6 +62,12 @@ class ForestCoverModel(LightningModule):
     def forward(self, batch):
         encoding = self.layer1(batch[0].float())
         encoding = self.layer2(self.relu(encoding))
+
+        # If more layers:
+        encoding = self.layer3(self.relu(encoding))
+        encoding = self.layer4(self.relu(encoding))
+
+        # Get logits
         logits = self.output(self.relu(encoding))
 
         return logits
@@ -72,7 +81,7 @@ class ForestCoverModel(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [48, 96], gamma=0.1)
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [32, 64, 96], gamma=0.2)
 
         opt = {
             'optimizer': optimizer,
