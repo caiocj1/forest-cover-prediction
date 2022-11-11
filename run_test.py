@@ -28,22 +28,18 @@ if __name__ == '__main__':
     model = ForestCoverModel()
 
     data_module = ForestCoverDataModule(
-        batch_size=1,
+        batch_size=32,
         num_workers=8
     )
+
+    trainer = Trainer(accelerator='auto',
+                      devices=1 if torch.cuda.is_available() else None)
 
     results = []
     for ckpt_name in os.listdir(args.weights_path):
         ckpt_path = os.path.join(args.weights_path, ckpt_name)
-        ckpt = torch.load(ckpt_path, map_location='cpu')
-        model.load_state_dict(ckpt['state_dict'])
-        print('loaded weights')
-        model.eval()
 
         # data_module.prepare_data()
         data_module.setup(stage='test')
-        test_dict = data_module.data_test
 
-        for key in test_dict:
-            pass
-
+        test_results = trainer.test(model, data_module, ckpt_path=ckpt_path, verbose=True)

@@ -56,6 +56,12 @@ class ForestCoverModel(LightningModule):
 
         return loss
 
+    def test_step(self, batch, batch_idx):
+        loss, metrics = self._shared_step(batch)
+
+        loss = loss.mean()
+        return loss
+
     def _shared_step(self, batch):
         logits = self.forward(batch)
 
@@ -84,8 +90,8 @@ class ForestCoverModel(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [128], gamma=0.1)
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [64, 128, 192], gamma=0.5)
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [128], gamma=0.1)
+        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [64, 128, 192], gamma=0.5)
 
         return [optimizer], [lr_scheduler]
 

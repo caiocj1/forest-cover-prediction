@@ -2,9 +2,9 @@ DatasetParams:
   reduced_dims: 38
 
 ModelParams:
-  layer_width: 512
-  num_layers: 7
-  dropout: True
+  layer_width: 256
+  num_layers: 5
+  dropout: False
 
 TrainingParams:
   num_splits: 5
