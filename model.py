@@ -110,5 +110,6 @@ class ForestCoverModel(LightningModule):
         self.validation_losses = []
 
     def on_validation_epoch_end(self) -> None:
-        print('loss_val per batch:', self.validation_losses)
-        print('loss_val average  :', sum(self.validation_losses) / len(self.validation_losses))
+        if self.trainer.current_epoch % 64 == 0:
+            print('loss_val per batch:', self.validation_losses)
+            print('loss_val average  :', sum(self.validation_losses) / len(self.validation_losses))
