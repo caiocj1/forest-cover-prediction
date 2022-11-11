@@ -101,7 +101,7 @@ class ForestCoverDataModule(LightningDataModule):
 
             test_dict = defaultdict()
             for i in range(len(test_X)):
-                test_dict[i] = (test_X[i], None)
+                test_dict[i] = (test_X[i], -1)
 
             self.data_test = test_dict
 
