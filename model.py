@@ -54,8 +54,6 @@ class ForestCoverModel(LightningModule):
         self.log_metrics(metrics, 'val')
         self.log('loss_val', loss, on_step=False, on_epoch=True, logger=True)
 
-        self.validation_losses.append(loss)
-
         return loss
 
     def _shared_step(self, batch):
@@ -105,11 +103,3 @@ class ForestCoverModel(LightningModule):
 
         for key in metrics:
             self.log(key + '_' + type, metrics[key], on_step=on_step, on_epoch=True, logger=True)
-
-    def on_validation_epoch_start(self) -> None:
-        self.validation_losses = []
-
-    def on_validation_epoch_end(self) -> None:
-        if self.trainer.current_epoch % 64 == 0:
-            print('loss_val per batch:', self.validation_losses)
-            print('loss_val average  :', sum(self.validation_losses) / len(self.validation_losses))
