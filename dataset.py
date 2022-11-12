@@ -40,7 +40,7 @@ class ForestCoverDataModule(LightningDataModule):
         self.train_std = self.train_df_input.values.std(0)
 
         # Fit eventual PCA
-        if self.reduced_dims:
+        if self.apply_pca:
             self.pca = PCA(self.reduced_dims)
             train_df_normalized = (self.train_df_input.values - self.train_mean) / self.train_std
             self.pca.fit(train_df_normalized)
@@ -51,6 +51,7 @@ class ForestCoverDataModule(LightningDataModule):
             params = yaml.load(f, Loader=SafeLoader)
         dataset_params = params['DatasetParams']
 
+        self.apply_pca = dataset_params['apply_pca']
         self.reduced_dims = dataset_params['reduced_dims']
 
     def setup(self, stage: str = None, k: int = 0):

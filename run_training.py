@@ -39,8 +39,9 @@ if __name__ == '__main__':
         data_module.setup(stage='fit', k=k)
 
         # Loggers and checkpoints
-        logger = TensorBoardLogger('.', version=args.version + '_split=' + str(k))
-        model_ckpt = ModelCheckpoint(dirpath=f'lightning_logs/{args.version}/checkpoints',
+        version = args.version + '_split=' + str(k)
+        logger = TensorBoardLogger('.', version=version)
+        model_ckpt = ModelCheckpoint(dirpath=f'lightning_logs/{args.version}_CV/checkpoints',
                                      filename='{epoch}-split=%d' % k,
                                      save_top_k=1,
                                      monitor='accuracy_val',

@@ -17,7 +17,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
     parser.add_argument('--weights_path', '-w', required=True)
 
     args = parser.parse_args()
