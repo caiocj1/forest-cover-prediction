@@ -5,6 +5,7 @@ import pandas as pd
 import yaml
 
 from models.simple_mlp import SimpleMLPModel
+from models.embed_mlp import EmbedMLPModel
 from dataset import ForestCoverDataModule
 
 import torch.cuda
@@ -15,6 +16,7 @@ if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights_path', '-w', required=True)
+    parser.add_argument('--model', '-m', default='mlp')
 
     args = parser.parse_args()
 
@@ -24,7 +26,11 @@ if __name__ == '__main__':
         params = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Model selection
-    model = SimpleMLPModel()
+    model = None
+    if args.model == 'mlp':
+        model = SimpleMLPModel()
+    elif args.model == 'embed':
+        model = EmbedMLPModel()
 
     data_module = ForestCoverDataModule(
         batch_size=32,
