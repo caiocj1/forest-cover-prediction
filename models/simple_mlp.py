@@ -6,15 +6,15 @@ import yaml
 from yaml import SafeLoader
 from collections import OrderedDict
 
-class ForestCoverModel(LightningModule):
+class SimpleMLPModel(LightningModule):
 
     def __init__(self):
-        super(ForestCoverModel, self).__init__()
+        super(SimpleMLPModel, self).__init__()
         self.read_config()
         self.build_model()
 
     def read_config(self):
-        config_path = os.path.join(os.getcwd(), 'config.yaml')
+        config_path = os.path.join(os.getcwd(), '../config.yaml')
         with open(config_path) as f:
             params = yaml.load(f, Loader=SafeLoader)
         dataset_params = params['DatasetParams']

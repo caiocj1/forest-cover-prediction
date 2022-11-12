@@ -2,7 +2,8 @@ import argparse
 import os
 import yaml
 
-from model import ForestCoverModel
+from models.simple_mlp import SimpleMLPModel
+from models.embed_mlp import EmbedMLPModel
 from dataset import ForestCoverDataModule
 
 import torch.cuda
@@ -15,6 +16,7 @@ if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
+    parser.add_argument('--model', '-m', default='mlp')
 
     args = parser.parse_args()
 
@@ -35,7 +37,11 @@ if __name__ == '__main__':
         print('Training on split', k, '...')
 
         # Initialize new model and setup data module
-        model = ForestCoverModel()
+        model = None
+        if args.model == 'mlp':
+            model = SimpleMLPModel()
+        elif args.model == 'embed':
+            model = EmbedMLPModel()
         data_module.setup(stage='fit', k=k)
 
         # Loggers and checkpoints

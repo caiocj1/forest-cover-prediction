@@ -4,15 +4,12 @@ import os
 import pandas as pd
 import yaml
 
-from model import ForestCoverModel
+from models.simple_mlp import SimpleMLPModel
 from dataset import ForestCoverDataModule
 
-import torch
 import torch.cuda
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from pytorch_lightning.loggers import TensorBoardLogger
 
 if __name__ == '__main__':
     # Arguments
@@ -27,7 +24,7 @@ if __name__ == '__main__':
         params = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Model selection
-    model = ForestCoverModel()
+    model = SimpleMLPModel()
 
     data_module = ForestCoverDataModule(
         batch_size=32,
