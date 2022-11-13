@@ -3,7 +3,7 @@ DatasetParams:
   reduced_dims: 38
 
 ModelParams:
-  layer_width: 32
+  layer_width: 64
   num_layers: 3
   dropout: False
   embed_dims: 10
