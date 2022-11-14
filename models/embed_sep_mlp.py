@@ -6,10 +6,10 @@ import yaml
 from yaml import SafeLoader
 from collections import OrderedDict
 
-class EmbedMLPModel(LightningModule):
+class EmbedSeparatelyMLPModel(LightningModule):
 
     def __init__(self):
-        super(EmbedMLPModel, self).__init__()
+        super(EmbedSeparatelyMLPModel, self).__init__()
         self.read_config()
         self.build_model()
 
@@ -31,25 +31,33 @@ class EmbedMLPModel(LightningModule):
     def build_model(self):
         assert not self.apply_pca, 'Must disable pca'
 
-        self.embed = nn.Sequential(
-            nn.Linear(43, self.layer_width),
+        self.embed_soil_type = nn.Sequential(
+            nn.Linear(39, 256),
             nn.ReLU(),
-            nn.Linear(self.layer_width, self.layer_width),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(self.layer_width, self.embed_dims)
+            nn.Linear(128, self.embed_dims)
         )
 
-        self.input = nn.Linear(10 + self.embed_dims, self.layer_width)
+        self.embed_wilderness_area = nn.Sequential(
+            nn.Linear(4, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, 1)
+        )
+
+        self.input = nn.Linear(10 + self.embed_dims + 1, self.layer_width)
 
         hidden_layers_dict = OrderedDict()
         for i in range(self.num_layers - 2):
-            hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width, self.layer_width)
+            hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width // (2**i), self.layer_width // (2**(i+1)))
             hidden_layers_dict['relu' + str(i + 1)] = nn.ReLU()
             if self.dropout:
                 hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout(p=0.25)
         self.hidden_layers = nn.Sequential(hidden_layers_dict)
 
-        self.output = nn.Linear(self.layer_width, 7)
+        self.output = nn.Linear(self.layer_width // (2 ** (self.num_layers - 2)), 7)
 
         self.relu = nn.ReLU()
 
@@ -87,10 +95,12 @@ class EmbedMLPModel(LightningModule):
         return loss, metrics
 
     def forward(self, batch):
-        cats = batch[0][:, -43:].float()
-        cats_embedded = self.embed(cats)
+        soil_type = batch[0][:, -39:].float()
+        soil_type_embedded = self.embed_soil_type(soil_type)
+        wilderness_area = batch[0][:, -43:-39].float()
+        wilderness_area_embedded = self.embed_wilderness_area(wilderness_area)
         nums = batch[0][:, :-43].float()
-        input = torch.cat([nums, cats_embedded], axis=1)
+        input = torch.cat([nums, wilderness_area_embedded, soil_type_embedded], axis=1)
 
         encoding = self.input(input)
         encoding = self.hidden_layers(self.relu(encoding))

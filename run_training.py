@@ -4,6 +4,7 @@ import yaml
 
 from models.simple_mlp import SimpleMLPModel
 from models.embed_mlp import EmbedMLPModel
+from models.embed_sep_mlp import EmbedSeparatelyMLPModel
 from dataset import ForestCoverDataModule
 
 import torch.cuda
@@ -42,6 +43,8 @@ if __name__ == '__main__':
             model = SimpleMLPModel()
         elif args.model == 'embed':
             model = EmbedMLPModel()
+        elif args.model == 'embed_sep':
+            model = EmbedSeparatelyMLPModel()
         data_module.setup(stage='fit', k=k)
 
         # Loggers and checkpoints
@@ -50,8 +53,8 @@ if __name__ == '__main__':
         model_ckpt = ModelCheckpoint(dirpath=f'lightning_logs/{args.version}_CV/checkpoints',
                                      filename='{epoch}-split=%d' % k,
                                      save_top_k=1,
-                                     monitor='accuracy_val',
-                                     mode='max',
+                                     monitor='loss_val',
+                                     mode='min',
                                      save_weights_only=True)
         lr_monitor = LearningRateMonitor()
 

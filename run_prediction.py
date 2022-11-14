@@ -6,6 +6,7 @@ import yaml
 
 from models.simple_mlp import SimpleMLPModel
 from models.embed_mlp import EmbedMLPModel
+from models.embed_sep_mlp import EmbedSeparatelyMLPModel
 from dataset import ForestCoverDataModule
 
 import torch.cuda
@@ -31,6 +32,8 @@ if __name__ == '__main__':
         model = SimpleMLPModel()
     elif args.model == 'embed':
         model = EmbedMLPModel()
+    elif args.model == 'embed_sep':
+        model = EmbedSeparatelyMLPModel()
 
     data_module = ForestCoverDataModule(
         batch_size=32,
