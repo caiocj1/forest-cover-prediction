@@ -34,9 +34,9 @@ class EmbedMLPModel(LightningModule):
         self.embed = nn.Sequential(
             nn.Linear(43, self.layer_width),
             nn.ReLU(),
-            nn.Linear(self.layer_width, self.layer_width),
+            nn.Linear(self.layer_width, self.layer_width // 2),
             nn.ReLU(),
-            nn.Linear(self.layer_width, self.embed_dims)
+            nn.Linear(self.layer_width // 2, self.embed_dims)
         )
 
         self.input = nn.Linear(10 + self.embed_dims, self.layer_width)

@@ -3,10 +3,10 @@ DatasetParams:
   reduced_dims: 38
 
 ModelParams:
-  layer_width: 64
+  layer_width: 128
   num_layers: 3
   dropout: False
-  embed_dims: 10
+  embed_dims: 20
 
 TrainingParams:
   num_splits: 10

@@ -14,7 +14,7 @@ class SimpleMLPModel(LightningModule):
         self.build_model()
 
     def read_config(self):
-        config_path = os.path.join(os.getcwd(), '../config.yaml')
+        config_path = os.path.join(os.getcwd(), './config.yaml')
         with open(config_path) as f:
             params = yaml.load(f, Loader=SafeLoader)
         dataset_params = params['DatasetParams']
