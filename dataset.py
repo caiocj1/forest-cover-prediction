@@ -91,21 +91,21 @@ class ForestCoverDataModule(LightningDataModule):
             self.data_train, self.data_val = train_dict, val_dict
 
         elif stage == 'predict':
-            test_full = pd.read_csv(self.test_path)
-            self.test_ids = test_full['Id']
-            test_full = test_full.drop(['Id', 'Soil_Type15'], axis=1)
+            predict_full = pd.read_csv(self.test_path)
+            self.predict_ids = predict_full['Id']
+            predict_full = predict_full.drop(['Id', 'Soil_Type15'], axis=1)
 
-            test_X = (test_full.values - self.train_mean) / self.train_std
+            predict_X = (predict_full.values - self.train_mean) / self.train_std
             if hasattr(self, 'pca'):
-                test_X = self.pca.transform(test_X)
+                predict_X = self.pca.transform(predict_X)
 
-            test_X = dict(enumerate(test_X))
+            predict_X = dict(enumerate(predict_X))
 
-            test_dict = defaultdict()
+            predict_dict = defaultdict()
             for i in range(len(test_X)):
-                test_dict[i] = (test_X[i], -1)
+                predict_dict[i] = (predict_X[i], -1)
 
-            self.data_predict = test_dict
+            self.data_predict = predict_dict
 
     def train_dataloader(self):
         return DataLoader(dataset=self.data_train,

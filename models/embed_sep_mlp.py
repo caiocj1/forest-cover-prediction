@@ -32,11 +32,11 @@ class EmbedSeparatelyMLPModel(LightningModule):
         assert not self.apply_pca, 'Must disable pca'
 
         self.embed_soil_type = nn.Sequential(
-            nn.Linear(39, 256),
+            nn.Linear(39, 64),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Linear(128, self.embed_dims)
+            nn.Linear(32, self.embed_dims)
         )
 
         self.embed_wilderness_area = nn.Sequential(
