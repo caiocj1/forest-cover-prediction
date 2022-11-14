@@ -116,8 +116,9 @@ class EmbedMLPModel(LightningModule):
         metrics = {}
 
         prediction = torch.argmax(logits, dim=1)
+        batch_size = len(logits)
 
-        metrics['accuracy'] = (prediction == target).mean()
+        metrics['accuracy'] = (prediction == target).sum() / batch_size
 
         return metrics
 
