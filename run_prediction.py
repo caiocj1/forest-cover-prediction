@@ -45,19 +45,16 @@ if __name__ == '__main__':
                       devices=1 if torch.cuda.is_available() else None)
 
     results = []
-    k = 0
     for ckpt_name in os.listdir(args.weights_path):
         ckpt_path = os.path.join(args.weights_path, ckpt_name)
 
         # data_module.prepare_data()
-        data_module.setup(stage='predict', k=k)
+        data_module.setup(stage='predict')
 
         test_results = trainer.predict(model, data_module, ckpt_path=ckpt_path, return_predictions=True)
 
         predictions = torch.argmax(torch.cat(test_results), dim=1).numpy() + 1
         results.append(predictions)
-
-        k += 1
 
     final_predictions = scipy.stats.mode(np.array(results)).mode[0]
     test_results_df = pd.DataFrame(data={'Cover_Type': final_predictions})

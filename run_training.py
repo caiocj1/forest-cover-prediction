@@ -53,8 +53,8 @@ if __name__ == '__main__':
         model_ckpt = ModelCheckpoint(dirpath=f'lightning_logs/{args.version}_CV/checkpoints',
                                      filename='{epoch}-split=%d' % k,
                                      save_top_k=1,
-                                     monitor='loss_val',
-                                     mode='min',
+                                     monitor='accuracy_val',
+                                     mode='max',
                                      save_weights_only=True)
         lr_monitor = LearningRateMonitor()
 
