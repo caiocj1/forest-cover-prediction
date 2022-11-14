@@ -109,8 +109,9 @@ class EmbedMLPModel(LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         #lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [128], gamma=0.1)
         # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [64, 128, 192], gamma=0.5)
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.998)
 
-        return [optimizer], []
+        return [optimizer], [lr_scheduler]
 
     def calc_metrics(self, logits, target):
         metrics = {}
