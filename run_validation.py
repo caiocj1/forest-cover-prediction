@@ -3,12 +3,13 @@ import os
 import numpy as np
 import pandas as pd
 import yaml
+import matplotlib.pyplot as plt
+import torch
+import torch.cuda
 
 from models.simple_mlp import SimpleMLPModel
 from models.embed_mlp import EmbedMLPModel
 from dataset import ForestCoverDataModule
-
-import torch.cuda
 
 from pytorch_lightning import Trainer
 
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     data_module = ForestCoverDataModule(
         split_seed=training_params['split_seed'],
         num_splits=training_params['num_splits'],
-        batch_size=32,
+        batch_size=256,
         num_workers=8
     )
 
@@ -52,10 +53,9 @@ if __name__ == '__main__':
 
         for batch in val_dataloader:
             logits = model(batch)
-            logits = logits.detach().numpy()
+            loss = torch.nn.functional.cross_entropy(torch.tensor(logits), batch[1], reduction='none')
 
-            predictions = np.argmax(logits, axis=1)
-
-            pass
+            plt.hist(loss.detach().numpy())
+            plt.show()
 
 

@@ -102,7 +102,7 @@ class ForestCoverDataModule(LightningDataModule):
             predict_X = dict(enumerate(predict_X))
 
             predict_dict = defaultdict()
-            for i in range(len(test_X)):
+            for i in range(len(predict_X)):
                 predict_dict[i] = (predict_X[i], -1)
 
             self.data_predict = predict_dict

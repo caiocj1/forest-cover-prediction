@@ -1,8 +1,9 @@
 import argparse
 import os
-
+import numpy as np
 import pandas as pd
 import yaml
+import scipy
 
 from models.simple_mlp import SimpleMLPModel
 from models.embed_mlp import EmbedMLPModel
@@ -44,18 +45,25 @@ if __name__ == '__main__':
                       devices=1 if torch.cuda.is_available() else None)
 
     results = []
+    k = 0
     for ckpt_name in os.listdir(args.weights_path):
         ckpt_path = os.path.join(args.weights_path, ckpt_name)
 
         # data_module.prepare_data()
-        data_module.setup(stage='predict')
+        data_module.setup(stage='predict', k=k)
 
         test_results = trainer.predict(model, data_module, ckpt_path=ckpt_path, return_predictions=True)
 
-        test_results_df = pd.DataFrame(data={'Cover_Type': torch.argmax(torch.cat(test_results), dim=1).numpy() + 1})
-        test_ids = pd.DataFrame(data_module.test_ids)
+        predictions = torch.argmax(torch.cat(test_results), dim=1).numpy() + 1
+        results.append(predictions)
 
-        submission = pd.concat([test_ids, test_results_df], axis=1)
-        dataset_path = os.getenv('DATASET_PATH')
-        submission_path = os.path.join(dataset_path, 'submission.csv')
-        submission.to_csv(submission_path, index=False)
+        k += 1
+
+    final_predictions = scipy.stats.mode(np.array(results)).mode[0]
+    test_results_df = pd.DataFrame(data={'Cover_Type': final_predictions})
+    test_ids = pd.DataFrame(data_module.predict_ids)
+
+    submission = pd.concat([test_ids, test_results_df], axis=1)
+    dataset_path = os.getenv('DATASET_PATH')
+    submission_path = os.path.join(dataset_path, 'submission.csv')
+    submission.to_csv(submission_path, index=False)
