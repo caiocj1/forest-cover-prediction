@@ -6,7 +6,7 @@ ModelParams:
   layer_width: 256
   num_layers: 5
   dropout: True
-  embed_dims: 10
+  embed_dims: 5
 
 TrainingParams:
   num_splits: 10
