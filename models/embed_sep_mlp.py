@@ -32,11 +32,11 @@ class EmbedSeparatelyMLPModel(LightningModule):
         assert not self.apply_pca, 'Must disable pca'
 
         self.embed_soil_type = nn.Sequential(
-            nn.Linear(39, 64),
+            nn.Linear(39, 32),
             nn.ReLU(),
-            nn.Linear(64, 32),
+            nn.Linear(32, 16),
             nn.ReLU(),
-            nn.Linear(32, self.embed_dims)
+            nn.Linear(16, self.embed_dims)
         )
 
         self.embed_wilderness_area = nn.Sequential(
@@ -51,13 +51,13 @@ class EmbedSeparatelyMLPModel(LightningModule):
 
         hidden_layers_dict = OrderedDict()
         for i in range(self.num_layers - 2):
-            hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width // (2**i), self.layer_width // (2**(i+1)))
+            hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width, self.layer_width)
             hidden_layers_dict['relu' + str(i + 1)] = nn.ReLU()
             if self.dropout:
-                hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout(p=0.25)
+                hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout()
         self.hidden_layers = nn.Sequential(hidden_layers_dict)
 
-        self.output = nn.Linear(self.layer_width // (2 ** (self.num_layers - 2)), 7)
+        self.output = nn.Linear(self.layer_width, 7)
 
         self.relu = nn.ReLU()
 
@@ -116,11 +116,11 @@ class EmbedSeparatelyMLPModel(LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=1e-3)
         #lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [128], gamma=0.1)
-        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [64, 128, 192], gamma=0.5)
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.985)
 
-        return [optimizer], []
+        return [optimizer], [lr_scheduler]
 
     def calc_metrics(self, logits, target):
         metrics = {}
