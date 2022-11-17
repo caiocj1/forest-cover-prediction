@@ -64,3 +64,5 @@ if __name__ == '__main__':
     dataset_path = os.getenv('DATASET_PATH')
     submission_path = os.path.join(dataset_path, 'submission.csv')
     submission.to_csv(submission_path, index=False)
+
+    print('\nSaved submission.csv to DATASET_PATH')
