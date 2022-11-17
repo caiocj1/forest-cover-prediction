@@ -12,7 +12,8 @@ if __name__ == '__main__':
     parser.add_argument('--classifier', '-c', required=True)
     parser.add_argument('--parameters', '-p', required=True)
     parser.add_argument('--label_encoding', '-l', default=False,
-                        help='Whether to use default one-hot encoding or label encoding')
+                        help='Whether to use default one-hot encoding or label encoding',
+                        action='store_true')
 
     args = parser.parse_args()
 
