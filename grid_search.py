@@ -10,14 +10,11 @@ if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--classifier', '-c', required=True)
-    parser.add_argument('--parameters', '-p', required=True)
     parser.add_argument('--label_encoding', '-l', default=False,
                         help='Whether to use default one-hot encoding or label encoding',
                         action='store_true')
 
     args = parser.parse_args()
-
-    parameters = ast.literal_eval(args.parameters)
 
     # Select model
     model = None
@@ -25,6 +22,15 @@ if __name__ == '__main__':
         model = xgboost.XGBClassifier()
     elif args.classifier == 'lightgbm':
         model = lightgbm.sklearn.LGBMClassifier()
+
+    parameters = {'learning_rate': [0.1, 0.15, 0.2, 0.25, 0.3],
+                  'n_estimators': [100, 150, 200, 250, 300],
+                  'max_depth': [4, 6, 8, 10, 12, 14, 16],
+                  'min_child_weight': [6, 10, 14, 18],
+                  'gamma': [0, 0.05, 0.1, 0.5, 1.0],
+                  'subsample': [0.8, 1.0],
+                  'colsample_bytree': [0.8, 1.0],
+                  'reg_alpha': [0, 0.005, 0.01]}
 
     # Get data
     train_df = pd.read_csv('data/train.csv')
