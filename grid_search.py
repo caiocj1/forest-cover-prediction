@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # Select model
     model = None
     if args.classifier == 'xgboost':
-        model = xgboost.XGBClassifier()
+        model = xgboost.XGBClassifier(use_label_encoder=False, verbosity=0)
     elif args.classifier == 'lightgbm':
         model = lightgbm.sklearn.LGBMClassifier()
 
