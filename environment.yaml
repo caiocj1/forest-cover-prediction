@@ -4,16 +4,20 @@ channels:
   - conda-forge
   - pytorch
   - jmcmurray
+  - nvidia
 dependencies:
   - numpy
   - pytorch
-  - torchvision
+  - pytorch-cuda=11.7
+  #- torchvision
   - pytorch-lightning
-  - tensorboard
+  #- tensorboard
   - os
-  - matplotlib
+  #- matplotlib
   - pandas
-  - scikit-learn
-  - jupyter
-  - xgboost
-  - lightgbm
+  #- scikit-learn
+  #- jupyter
+  #- xgboost
+  #- lightgbm
+  #- seaborn
+  #- pytorch_tabnet
