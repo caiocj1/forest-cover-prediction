@@ -57,10 +57,8 @@ if __name__ == '__main__':
         results.append(predictions)
 
     final_predictions = scipy.stats.mode(np.array(results)).mode[0]
-    test_results_df = pd.DataFrame(data={'Cover_Type': final_predictions})
-    test_ids = pd.DataFrame(data_module.predict_ids)
+    submission = pd.DataFrame(data={'Id': data_module.test_ids, 'Cover_Type': final_predictions})
 
-    submission = pd.concat([test_ids, test_results_df], axis=1)
     dataset_path = os.getenv('DATASET_PATH')
     submission_path = os.path.join(dataset_path, 'submission.csv')
     submission.to_csv(submission_path, index=False)

@@ -4,8 +4,8 @@ DatasetParams:
 
 ModelParams:
   layer_width: 128
-  num_layers: 3
-  dropout: True
+  num_layers: 4
+  dropout: 0.5
   embed_dims: 10
 
 TrainingParams:

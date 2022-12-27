@@ -31,14 +31,15 @@ class SimpleMLPModel(LightningModule):
         if self.apply_pca:
             self.input = nn.Linear(self.reduced_dims, self.layer_width)
         else:
-            self.input = nn.Linear(53, self.layer_width)
+            self.input = nn.Linear(62, self.layer_width)
+
         hidden_layers_dict = OrderedDict()
         for i in range(self.num_layers - 2):
             hidden_layers_dict['layer' + str(i + 1)] = nn.Linear(self.layer_width, self.layer_width)
             hidden_layers_dict['relu' + str(i + 1)] = nn.ReLU()
-            if self.dropout:
-                hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout()
+            hidden_layers_dict['dropout' + str(i + 1)] = nn.Dropout(p=self.dropout)
         self.hidden_layers = nn.Sequential(hidden_layers_dict)
+
         self.output = nn.Linear(self.layer_width, 7)
         self.relu = nn.ReLU()
 
@@ -93,8 +94,8 @@ class SimpleMLPModel(LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [128], gamma=0.1)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=1e-3)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
         # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [64, 128, 192], gamma=0.5)
 
         return [optimizer], [lr_scheduler]

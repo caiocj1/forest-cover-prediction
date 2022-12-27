@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import yaml
+import numpy as np
 from yaml import SafeLoader
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -26,18 +27,22 @@ class ForestCoverDataModule(LightningDataModule):
         # Read config file
         self.read_config()
 
-        # Declare data
-        self.data_train: Optional[Dataset] = None
-        self.data_val: Optional[Dataset] = None
-
         # Prepare split
         self.kf = KFold(n_splits=self.hparams.num_splits, shuffle=True, random_state=self.hparams.split_seed)
 
         # Get training set
-        self.train_df = pd.read_csv(self.train_path)
-        self.train_df_input = self.train_df.drop(['Id', 'Soil_Type15', 'Cover_Type'], axis=1)
+        read_train_df = pd.read_csv(self.train_path)
+        self.train_df = self.format_df(read_train_df)
+        self.train_df_input = self.feature_engineering(self.train_df, type='train')
+
         self.train_mean = self.train_df_input.values.mean(0)
         self.train_std = self.train_df_input.values.std(0)
+
+        # Get test set
+        read_test_df = pd.read_csv(self.test_path)
+        self.test_ids = read_test_df['Id']
+        self.test_df = self.format_df(read_test_df, type='test')
+        self.test_df_input = self.feature_engineering(self.test_df, type='test')
 
         # Fit eventual PCA
         if self.apply_pca:
@@ -55,6 +60,12 @@ class ForestCoverDataModule(LightningDataModule):
         self.reduced_dims = dataset_params['reduced_dims']
 
     def setup(self, stage: str = None, k: int = 0):
+        """
+        Build data dictionaries for training or prediction.
+        :param stage: 'fit' for training, 'predict' for prediction
+        :param k: which fold to train on
+        :return: None
+        """
         assert 0 <= k < self.hparams.num_splits, "incorrect fold number"
 
         if stage == 'fit':
@@ -62,48 +73,24 @@ class ForestCoverDataModule(LightningDataModule):
             all_splits = [i for i in self.kf.split(self.train_df_input)]
             train_indexes, val_indexes = all_splits[k]
 
-            train_df = self.train_df_input.iloc[train_indexes]
-            val_df = self.train_df_input.iloc[val_indexes]
-
-            # Get inputs
-            train_X = (train_df.values - self.train_mean) / self.train_std
-            val_X = (val_df.values - self.train_mean) / self.train_std
-
-            if hasattr(self, 'pca'):
-                train_X = self.pca.transform(train_X)
-                val_X = self.pca.transform(val_X)
-
-            train_X = dict(enumerate(train_X))
-            val_X = dict(enumerate(val_X))
-
-            # Get labels
-            train_y = dict(enumerate(self.train_df.iloc[train_indexes]['Cover_Type'].values - 1))
-            val_y = dict(enumerate(self.train_df.iloc[val_indexes]['Cover_Type'].values - 1))
-
-            # Get dict
-            train_dict = defaultdict()
-            val_dict = defaultdict()
-            for i in range(len(train_y)):
-                train_dict[i] = (train_X[i], train_y[i])
-            for i in range(len(val_y)):
-                val_dict[i] = (val_X[i], val_y[i])
+            train_dict = self.format_X(self.train_df_input.iloc[train_indexes],
+                                       self.train_mean,
+                                       self.train_std,
+                                       type='train',
+                                       indexes=train_indexes)
+            val_dict = self.format_X(self.train_df_input.iloc[val_indexes],
+                                     self.train_mean,
+                                     self.train_std,
+                                     type='train',
+                                     indexes=val_indexes)
 
             self.data_train, self.data_val = train_dict, val_dict
 
         elif stage == 'predict':
-            predict_full = pd.read_csv(self.test_path)
-            self.predict_ids = predict_full['Id']
-            predict_full = predict_full.drop(['Id', 'Soil_Type15'], axis=1)
-
-            predict_X = (predict_full.values - self.train_mean) / self.train_std
-            if hasattr(self, 'pca'):
-                predict_X = self.pca.transform(predict_X)
-
-            predict_X = dict(enumerate(predict_X))
-
-            predict_dict = defaultdict()
-            for i in range(len(predict_X)):
-                predict_dict[i] = (predict_X[i], -1)
+            predict_dict = self.format_X(self.test_df_input,
+                                         self.train_mean,
+                                         self.train_std,
+                                         type='test')
 
             self.data_predict = predict_dict
 
@@ -124,3 +111,98 @@ class ForestCoverDataModule(LightningDataModule):
                           batch_size=self.hparams.batch_size,
                           num_workers=self.hparams.num_workers,
                           shuffle=False)
+
+    def format_df(self,
+                  df: pd.DataFrame,
+                  type: str = 'train'):
+        """
+        Formats the .csv read into an initial dataframe with base features.
+        :param df: dataframe read from a csv file
+        :param type: whether we are treating a training or test set
+        :return: correctly formatted dataframe
+        """
+        final_df = df.drop(['Id'], axis=1)
+
+        final_df = final_df.drop(['Soil_Type15'], axis=1)
+
+        return final_df
+
+    def feature_engineering(self,
+                            df: pd.DataFrame,
+                            type: str = 'train'):
+        """
+        Adds non-trivial features to dataframe, drops target/text/useless columns, so as to prepare the input to the
+        deep learning model.
+        :param df: formatted dataframe from format_df
+        :param type: whether we are treating a training or test set
+        :return: correctly formatted input dataframe
+        """
+        final_df = df.copy()
+
+        if type == 'train':
+            final_df = final_df.drop(['Cover_Type'], axis=1)
+
+        # ANGLE TREATMENT
+        final_df['Aspect'] = np.cos(final_df['Aspect'] * np.pi / 180.)
+
+        # HORIZONTAL DISTANCES TREATMENT
+        final_df['Hor_Total_Mean'] = (final_df['Horizontal_Distance_To_Fire_Points'] + final_df[
+            'Horizontal_Distance_To_Roadways'] + final_df['Horizontal_Distance_To_Hydrology']) / 3
+
+        final_df['Hor_Hydr_Fire_Sum'] = final_df['Horizontal_Distance_To_Hydrology'] + final_df[
+            'Horizontal_Distance_To_Fire_Points']
+        final_df['Hor_Hydr_Road_Sum'] = final_df['Horizontal_Distance_To_Hydrology'] + final_df[
+            'Horizontal_Distance_To_Roadways']
+        final_df['Hor_Fire_Road_Sum'] = final_df['Horizontal_Distance_To_Fire_Points'] + final_df[
+            'Horizontal_Distance_To_Roadways']
+
+        final_df['Hor_Hydr_Fire_Diff'] = np.abs(
+            final_df['Horizontal_Distance_To_Hydrology'] - final_df['Horizontal_Distance_To_Fire_Points'])
+        final_df['Hor_Hydr_Road_Diff'] = np.abs(
+            final_df['Horizontal_Distance_To_Hydrology'] - final_df['Horizontal_Distance_To_Roadways'])
+        final_df['Hor_Fire_Road_Diff'] = np.abs(
+            final_df['Horizontal_Distance_To_Fire_Points'] - final_df['Horizontal_Distance_To_Roadways'])
+
+        # VERTICAL DISTANCES TREATMENT
+        final_df['Ver_Elev_Hydr_Sum'] = final_df['Elevation'] + final_df['Vertical_Distance_To_Hydrology']
+
+        final_df['Ver_Elev_Hydr_Diff'] = np.abs(final_df['Elevation'] - final_df['Vertical_Distance_To_Hydrology'])
+
+        return final_df
+
+    def format_X(self,
+                 df: pd.DataFrame,
+                 mean: np.ndarray,
+                 std: np.ndarray,
+                 type: str = 'train',
+                 indexes: np.ndarray = None):
+        """
+        Prepares a dictionary in which to each key is associated a tuple of (input vector, retweet count ground truth),
+        from the rows of the dataframe given.
+        :param df: correctly formatted input dataframe from feature_engineering
+        :param mean: vector with which we normalize the data
+        :param std: vector with which we normalize the data
+        :param type: whether we are treating a training or test set
+        :param indexes: if treating training set, separate train and validation
+        :return: correctly dictionary to be passed to DataLoader
+        """
+        # Get inputs
+        X = (df.values - mean) / std
+
+        if hasattr(self, 'pca'):
+            X = self.pca.transform(X)
+
+        X = dict(enumerate(X))
+
+        # Get labels
+        if type == 'train':
+            y = dict(enumerate(self.train_df.iloc[indexes]['Cover_Type'].values - 1))
+        else:
+            y = dict(enumerate(np.zeros((len(X), ))))
+
+        # Get dict
+        final_dict = defaultdict()
+        for i in range(len(y)):
+            final_dict[i] = (X[i], y[i])
+
+        return final_dict

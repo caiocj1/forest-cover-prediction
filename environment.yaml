@@ -6,11 +6,13 @@ channels:
   - jmcmurray
   - nvidia
 dependencies:
+  - python=3.9
   - numpy
   - pytorch
   - pytorch-cuda=11.7
   #- torchvision
   - pytorch-lightning
+  - scikit-learn
   #- tensorboard
   - os
   #- matplotlib
